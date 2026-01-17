@@ -1,3 +1,162 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>台灣好行金門｜即時路線解謎（A線示範）</title>
+  <meta name="theme-color" content="#0b0c10" />
+  <style>
+    :root{font-family:system-ui,-apple-system,"Noto Sans TC",Segoe UI,Roboto,Arial}
+    body{margin:0;background:#0b0c10;color:#f5f5f5}
+    .wrap{max-width:880px;margin:0 auto;padding:18px}
+    .card{background:#141622;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.03);font-size:12px;opacity:.95}
+    h1{font-size:22px;margin:8px 0 0}
+    h2{font-size:16px;margin:0}
+    .sub{opacity:.86;font-size:13px;line-height:1.65;margin-top:8px}
+    .tiny{font-size:12px;opacity:.86;line-height:1.6}
+    .muted{opacity:.72}
+    .btn{appearance:none;border:1px solid rgba(255,255,255,.12);background:#1d2140;color:#fff;border-radius:14px;padding:10px 12px;font-weight:900;cursor:pointer}
+    .btn.secondary{background:#141622}
+    .btn.good{background:#1f3d2c}
+    .btn.warn{background:#40211d}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    select,input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:#0f1120;color:#fff;font-size:16px}
+    .progress{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .bar{height:100%;background:#7aa2ff;width:0%}
+    .stop{border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:12px;background:rgba(255,255,255,.03)}
+    .stop.locked{opacity:.55}
+    .stop.done{background:rgba(122,162,255,.12);border-color:rgba(122,162,255,.35)}
+    .tag{display:inline-block;margin-right:6px;margin-top:6px;border:1px solid rgba(255,255,255,.12);padding:4px 8px;border-radius:999px;font-size:12px;opacity:.9}
+    @media (max-width:760px){.grid2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="pill">🚌 台灣好行金門｜即時路線解謎（示範：A線）</div>
+          <h1>在車上也能玩：到站才解鎖下一關</h1>
+          <div class="sub">
+            玩法：<b>開定位（或手動選站）→ 在站點附近自動解鎖 → 解謎答對 → 取得通關章</b>。<br/>
+            這套機制的核心是把「搭乘行為」直接變成遊戲進度：越搭越解鎖、越玩越想下車看。
+          </div>
+        </div>
+        <button class="btn secondary" id="resetBtn">重置進度</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="pill">🎯 目前路線：A線（水頭翟山線）</div>
+        <div class="pill">分數：<span id="score">0</span>　連勝：<span id="streak">0</span></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="row">
+          <div class="tiny muted">進度</div>
+          <div class="tiny muted"><span id="doneCount">0</span>/<span id="needCount">0</span></div>
+        </div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div class="tiny muted" style="margin-top:8px" id="progressHint"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="margin:0">
+        <h2>① 解鎖方式</h2>
+        <div class="tiny muted" style="margin-top:8px">
+          正式上線建議用 GPS 解鎖；demo 或室內測試可改用「手動選站」。
+        </div>
+
+        <div class="stop" style="margin-top:12px">
+          <div class="row" style="justify-content:flex-start">
+            <span class="tag">GPS 解鎖</span>
+            <span class="tag">近距離自動開關卡</span>
+          </div>
+          <div class="tiny muted" style="margin-top:8px" id="gpsStatus">定位狀態：未啟用</div>
+          <div class="row" style="margin-top:10px;justify-content:flex-start">
+            <button class="btn" id="gpsBtn">啟用定位</button>
+            <button class="btn secondary" id="gpsStopBtn">停止定位</button>
+          </div>
+          <div class="tiny muted" style="margin-top:8px">
+            提醒：iOS 需允許定位；若在 LINE/IG 內建瀏覽器，建議「在 Safari/Chrome 開啟」。
+          </div>
+        </div>
+
+        <div class="stop" style="margin-top:12px">
+          <div class="row" style="justify-content:flex-start">
+            <span class="tag">手動選站</span>
+            <span class="tag">demo/不開定位</span>
+          </div>
+          <div style="margin-top:8px">
+            <select id="manualSelect"></select>
+          </div>
+          <div class="row" style="margin-top:10px;justify-content:flex-start">
+            <button class="btn secondary" id="manualGoBtn">前往該站任務</button>
+          </div>
+        </div>
+
+        <div class="stop" style="margin-top:12px">
+          <div class="row" style="justify-content:flex-start">
+            <span class="tag">輸入站碼</span>
+            <span class="tag">配合 QR</span>
+          </div>
+          <div class="tiny muted" style="margin-top:8px">例如：A06、A07、A10（掃 QR 也可帶 stop 參數）</div>
+          <input id="codeInput" placeholder="輸入站碼，例如 A10" style="margin-top:8px" />
+          <div class="row" style="margin-top:10px;justify-content:flex-start">
+            <button class="btn secondary" id="codeGoBtn">前往該站任務</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card" style="margin:0">
+        <h2>② 站點任務（到站才解鎖）</h2>
+        <div id="missionBox" class="tiny muted" style="margin-top:10px">
+          先啟用 GPS 或用「手動選站」進入第一關。
+        </div>
+        <div id="missionActions" class="row" style="margin-top:10px;justify-content:flex-start;display:none"></div>
+
+        <div class="stop" style="margin-top:12px">
+          <div class="tiny muted">📍 你的定位（若已啟用）</div>
+          <div class="tiny" style="margin-top:6px" id="locText">尚未取得定位</div>
+          <div class="tiny muted" style="margin-top:6px" id="nearText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>③ 關卡列表（A線示範）</h2>
+      <div class="sub">
+        這裡先放 8 關示範（可擴成完整逐站）。<b>通關規則：</b>要依順序完成（模擬「搭乘路線」）。
+      </div>
+      <div id="stopsGrid" class="grid2" style="margin-top:12px"></div>
+      <div class="tiny muted" style="margin-top:10px">
+        ※ 站點座標目前為示意值：正式版請替換為正確座標或改用 QR/站碼解鎖。
+      </div>
+    </div>
+
+    <div class="card" id="finish" style="display:none">
+      <div class="pill">🎉 A線解謎完成</div>
+      <h2 style="margin-top:8px">你完成了「即時路線解謎」！</h2>
+      <div class="sub" id="finishText"></div>
+      <div class="row" style="margin-top:12px;justify-content:flex-start">
+        <button class="btn good" id="shareBtn">一鍵分享</button>
+        <button class="btn secondary" id="couponBtn">顯示兌換碼</button>
+      </div>
+      <div class="tiny" style="margin-top:10px" id="couponHint"></div>
+    </div>
+  </div>
+
+<script>
+/** ========= 站點資料（A線示範） =========
+ * id：站碼（用於 QR / 手動選站）
+ * lat/lng：示意座標（正式版請換成真實座標）
+ * unlockRadiusM：距離多少公尺內解鎖
+ * q：題目
+ */
 const A_STOPS = [
   { id:"A01", name:"金城車站", tags:["起點","交通"], lat:24.43346, lng:118.31989, unlockRadiusM:200,
     story:"從金城出發，今天你不是趕行程，而是在『搭車解謎』。",
@@ -34,3 +193,285 @@ const A_STOPS = [
     q:{ t:"完成徽章最適合做什麼？", a:["到店兌換/抽獎","立刻刪掉","不分享"], c:0 }
   },
 ];
+
+
+const ROUTE_NAME = "A線（水頭翟山線）";
+const KEY = "km_live_route_riddle_A_v1";
+
+const state = JSON.parse(localStorage.getItem(KEY) || "{}");
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function $(s){ return document.querySelector(s); }
+
+state.done ||= [];       // 已完成站點 id
+state.score ||= 0;
+state.streak ||= 0;
+state.current ||= A_STOPS[0].id; // 目前關卡目標（依順序）
+
+const needCount = A_STOPS.length;
+
+let watchId = null;
+let lastPos = null;
+
+function normCode(s){
+  return (s||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+}
+
+function getStop(id){
+  return A_STOPS.find(x=>x.id===id);
+}
+
+function nextStopId(){
+  const idx = A_STOPS.findIndex(s=>s.id===state.current);
+  if(idx < 0) return A_STOPS[0].id;
+  return A_STOPS[Math.min(idx+1, A_STOPS.length-1)].id;
+}
+
+function requiredStop(){
+  // 目前必須完成的那一關（順序進行）
+  return getStop(state.current) || A_STOPS[0];
+}
+
+function haversineM(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function render(){
+  $("#score").textContent = String(state.score);
+  $("#streak").textContent = String(state.streak);
+  $("#doneCount").textContent = String(state.done.length);
+  $("#needCount").textContent = String(needCount);
+
+  const pct = (state.done.length / needCount) * 100;
+  $("#bar").style.width = `${Math.min(100, pct)}%`;
+
+  const req = requiredStop();
+  $("#progressHint").textContent = `下一關：${req.id}｜${req.name}（需依順序通關）`;
+
+  // stops list
+  const grid = $("#stopsGrid");
+  grid.innerHTML = "";
+  A_STOPS.forEach((st, idx)=>{
+    const done = state.done.includes(st.id);
+    const locked = !done && st.id !== state.current; // 只能做 current 那關
+    const div = document.createElement("div");
+    div.className = "stop" + (done ? " done" : (locked ? " locked" : ""));
+    div.innerHTML = `
+      <div style="font-weight:900">${done?"✅":"${locked?"🔒":"🎯"}"} ${st.name}</div>
+      <div class="tiny muted">站碼：${st.id}</div>
+      <div>${st.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+      <div class="tiny" style="margin-top:8px;opacity:.9">${st.story}</div>
+      <div class="row" style="margin-top:10px;justify-content:flex-start">
+        <button class="btn secondary" data-go="${st.id}" ${locked ? "disabled style='opacity:.5;cursor:not-allowed'" : ""}>前往任務</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+
+  grid.querySelectorAll("button[data-go]").forEach(b=>{
+    b.onclick = ()=>openMission(b.getAttribute("data-go"));
+  });
+
+  // manual select options
+  const sel = $("#manualSelect");
+  if(sel.options.length === 0){
+    A_STOPS.forEach(st=>{
+      const opt = document.createElement("option");
+      opt.value = st.id;
+      opt.textContent = `${st.id}｜${st.name}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  // finish block
+  if(state.done.length >= needCount){
+    $("#finish").style.display = "";
+    $("#finishText").textContent = `你完成了 ${ROUTE_NAME} 的即時解謎！建議用此畫面作為「到店兌換/抽獎/導購套票」入口。`;
+  }else{
+    $("#finish").style.display = "none";
+  }
+}
+
+function openMission(id){
+  const req = requiredStop();
+  const box = $("#missionBox");
+  const act = $("#missionActions");
+  act.style.display = "none";
+
+  if(id !== req.id){
+    box.className = "tiny muted";
+    box.innerHTML = `目前需先完成 <b>${req.id}｜${req.name}</b> 才能解鎖下一關。`;
+    return;
+  }
+
+  // 是否已在附近（GPS 解鎖）
+  let nearOk = true;
+  let distText = "";
+  if(lastPos){
+    const d = haversineM(lastPos.lat, lastPos.lng, req.lat, req.lng);
+    nearOk = d <= req.unlockRadiusM;
+    distText = `（距離約 ${Math.round(d)}m，解鎖範圍 ${req.unlockRadiusM}m）`;
+  }else{
+    // 沒定位就允許手動 demo
+    nearOk = true;
+    distText = "（未啟用定位：以 demo 模式進入）";
+  }
+
+  if(!nearOk){
+    box.className = "tiny muted";
+    box.innerHTML = `你還沒到達 <b>${req.name}</b> 附近，先搭車到站再挑戰！<br/><span class="muted">${distText}</span>`;
+    return;
+  }
+
+  box.className = "tiny";
+  box.innerHTML = `
+    <div class="pill">📍 ${req.id}｜${req.name}</div>
+    <div style="margin-top:10px;opacity:.92">${req.story}</div>
+    <div style="margin-top:10px;font-weight:900">謎題：</div>
+    <div style="margin-top:6px">${req.q.t} <span class="muted">${distText}</span></div>
+  `;
+
+  act.innerHTML = "";
+  req.q.a.forEach((opt, idx)=>{
+    const b = document.createElement("button");
+    b.className = "btn secondary";
+    b.textContent = `${idx+1}. ${opt}`;
+    b.onclick = ()=>answer(req, idx);
+    act.appendChild(b);
+  });
+  act.style.display = "flex";
+}
+
+function answer(req, pickIdx){
+  const box = $("#missionBox");
+  const act = $("#missionActions");
+  if(pickIdx === req.q.c){
+    // correct
+    state.done ||= [];
+    if(!state.done.includes(req.id)) state.done.push(req.id);
+
+    state.streak = (state.streak||0) + 1;
+    const bonus = Math.min(30, state.streak * 3);
+    state.score = (state.score||0) + 20 + bonus;
+
+    // advance current
+    const idx = A_STOPS.findIndex(s=>s.id===req.id);
+    if(idx < A_STOPS.length - 1){
+      state.current = A_STOPS[idx+1].id;
+    }
+    save();
+
+    box.className = "tiny";
+    box.innerHTML = `✅ 通關成功！你獲得 <b>${20+bonus}</b> 分（連勝加成 +${bonus}）。<br/>
+      下一關已解鎖：<b>${requiredStop().id}｜${requiredStop().name}</b>`;
+    act.style.display = "none";
+    render();
+  }else{
+    // wrong
+    state.streak = 0;
+    save();
+    box.className = "tiny";
+    box.innerHTML = `再試一次～提示：這題答案跟「搭乘到站解鎖」或「導流分享」有關。`;
+  }
+}
+
+function startGPS(){
+  if(!navigator.geolocation){
+    $("#gpsStatus").textContent = "定位狀態：此瀏覽器不支援定位";
+    return;
+  }
+  if(watchId !== null) return;
+
+  $("#gpsStatus").textContent = "定位狀態：請允許定位…";
+  watchId = navigator.geolocation.watchPosition(
+    (pos)=>{
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy || 0);
+      lastPos = { lat, lng, acc, t: Date.now() };
+
+      $("#locText").textContent = `lat ${lat.toFixed(6)}, lng ${lng.toFixed(6)}（精度約 ${acc}m）`;
+
+      const req = requiredStop();
+      const d = haversineM(lat, lng, req.lat, req.lng);
+      const near = d <= req.unlockRadiusM;
+      $("#nearText").textContent = `距離下一關「${req.name}」約 ${Math.round(d)}m（${near ? "✅ 可解鎖" : "🔒 未到達"}）`;
+
+      $("#gpsStatus").textContent = "定位狀態：已啟用（即時更新中）";
+      // 如果已經靠近就自動打開任務
+      if(near) openMission(req.id);
+    },
+    (err)=>{
+      $("#gpsStatus").textContent = "定位狀態：啟用失敗（請在瀏覽器設定允許定位）";
+      $("#locText").textContent = `錯誤：${err.message || err.code}`;
+    },
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 12000 }
+  );
+}
+
+function stopGPS(){
+  if(watchId !== null){
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    $("#gpsStatus").textContent = "定位狀態：已停止";
+    $("#nearText").textContent = "";
+  }
+}
+
+function showCoupon(){
+  const device = (state.deviceId ||= Math.random().toString(16).slice(2,10)).toUpperCase();
+  save();
+  $("#couponHint").textContent = `示範兌換碼：KM-A-RIDDLE-${device}（正式版建議後端核銷）`;
+}
+
+function share(){
+  const text = `我剛完成台灣好行金門 ${ROUTE_NAME} 的「即時路線解謎」🚌🧩 分數 ${state.score}！#台灣好行 #金門`;
+  if(navigator.share){
+    navigator.share({ title:"台灣好行金門｜即時路線解謎", text }).catch(()=>{});
+  }else{
+    navigator.clipboard?.writeText(text).then(()=>alert("已複製分享文案到剪貼簿！")).catch(()=>alert(text));
+  }
+}
+
+// buttons
+$("#gpsBtn").onclick = startGPS;
+$("#gpsStopBtn").onclick = stopGPS;
+
+$("#manualGoBtn").onclick = ()=>openMission($("#manualSelect").value);
+$("#codeGoBtn").onclick = ()=>{
+  const code = normCode($("#codeInput").value);
+  openMission(code);
+};
+
+$("#resetBtn").onclick = ()=>{
+  localStorage.removeItem(KEY);
+  location.href = location.pathname + "?v=" + Date.now();
+};
+
+$("#couponBtn").onclick = showCoupon;
+$("#shareBtn").onclick = share;
+
+// boot: support ?stop=A10
+(function boot(){
+  $("#needCount").textContent = String(needCount);
+  render();
+
+  const url = new URL(location.href);
+  const stop = url.searchParams.get("stop");
+  if(stop){
+    const code = normCode(stop);
+    // 若 URL 指向的不是 current，仍遵循順序規則
+    $("#codeInput").value = code;
+    openMission(code);
+  }else{
+    // 自動聚焦到當前關卡
+    openMission(state.current);
+  }
+})();
+</script>
+</body>
+</html>
