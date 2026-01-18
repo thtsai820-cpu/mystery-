@@ -208,6 +208,32 @@
       <button class="btn secondary" id="couponBtn">顯示兌換碼</button>
     </div>
     <div class="tiny" style="margin-top:10px" id="couponHint"></div>
+
+    <!-- ===== 低碳成績（完成後顯示）===== -->
+    <div class="stop" style="margin-top:12px;display:none" id="carbonBox" aria-live="polite">
+      <div class="row" style="justify-content:flex-start">
+        <span class="tag">🌱 低碳成績</span>
+        <span class="tag">搭好行＝減碳行動</span>
+      </div>
+
+      <div class="tiny" style="margin-top:8px">
+        你本趟完成 A線解謎的「低碳成果」如下（估算值，用於教育展示）：
+      </div>
+
+      <div class="row" style="margin-top:10px;justify-content:flex-start;gap:12px;flex-wrap:wrap">
+        <div class="pill">減碳：<b id="co2SavedText">--</b></div>
+        <div class="pill">綠行點數：<b id="greenPointsText">--</b></div>
+        <div class="pill">相當於：<b id="equivText">--</b></div>
+      </div>
+
+      <div class="tiny muted" style="margin-top:10px" id="carbonNote"></div>
+
+      <div class="row" style="margin-top:10px;justify-content:flex-start">
+        <button class="btn secondary" id="shareGreenBtn">📣 分享低碳成績</button>
+      </div>
+    </div>
+    <!-- ===== 低碳成績結束 ===== -->
+
   </div>
 </div>
 
@@ -290,6 +316,90 @@ function haversineM(lat1, lon1, lat2, lon2){
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+/* ================== 低碳估算模組（前端版） ================== */
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+// 估算：以「完成關卡數」推估移動距離（教育展示用）
+// 之後若有真實站點距離，可改成站點間距離加總
+function estimateKmByStops(stopsCount){
+  // A線示範：每關平均 2.2 km（可調）
+  var km = stopsCount * 2.2;
+  return clamp(km, 2, 35);
+}
+
+// 簡化排放係數（教育展示用，單位：g CO2 / km）
+var EF_SCOOTER_G_PER_KM = 85;
+var EF_BUS_PER_CAP_G_PER_KM = 30;
+
+function carbonEquivalent(co2g){
+  // 汽油燃燒約 2.31 kg CO2 / L（教育換算用）
+  var gasolineL = (co2g/1000) / 2.31;
+  var gasolineMl = Math.round(gasolineL * 1000);
+
+  // 用電示意（教育展示用，避免寫死台灣電力係數）
+  var wh = Math.round((co2g/1000) * 600);
+
+  if(co2g < 200){
+    return "汽油約 " + gasolineMl + " mL";
+  }else if(co2g < 1000){
+    return "汽油約 " + gasolineMl + " mL，約 " + wh + " Wh 用電";
+  }else{
+    return "汽油約 " + gasolineMl + " mL，約 " + wh + " Wh 用電";
+  }
+}
+
+function updateCarbonSummary(timeSec){
+  var carbonBox = document.getElementById("carbonBox");
+  var co2El = document.getElementById("co2SavedText");
+  var gpEl  = document.getElementById("greenPointsText");
+  var eqEl  = document.getElementById("equivText");
+  var noteEl= document.getElementById("carbonNote");
+  var shareBtn = document.getElementById("shareGreenBtn");
+
+  if(!carbonBox || !co2El || !gpEl || !eqEl || !noteEl) return;
+
+  var doneN = (state.done && state.done.length) ? state.done.length : 0;
+  var km = estimateKmByStops(doneN);
+
+  var savedG = Math.max(0, Math.round((EF_SCOOTER_G_PER_KM - EF_BUS_PER_CAP_G_PER_KM) * km));
+  var savedKg = (savedG/1000);
+
+  // 綠行點數：1 點 = 10 gCO2（數字直覺）
+  var greenPoints = Math.max(1, Math.round(savedG / 10));
+
+  co2El.textContent = savedKg.toFixed(2) + " kg CO₂e";
+  gpEl.textContent  = String(greenPoints) + " 點";
+  eqEl.textContent  = carbonEquivalent(savedG);
+
+  noteEl.textContent =
+    "估算基礎：完成 " + doneN + " 關 ≈ " + km.toFixed(1) + " km；" +
+    "以「短程機車 vs. 公車人均」差額估算。（教育展示用，未納入實際載客率與路段差異）";
+
+  carbonBox.style.display = "";
+
+  var shareText =
+    "🌱我剛完成台灣好行金門 A線「即時解謎」！" +
+    "本趟估算減碳 " + savedKg.toFixed(2) + " kg CO₂e（綠行點數 " + greenPoints + "）" +
+    "，完成時間 " + timeSec + " 秒。" +
+    " #台灣好行 #金門 #低碳旅行";
+
+  if(shareBtn){
+    shareBtn.onclick = function(){
+      if(navigator.share){
+        navigator.share({ title:"台灣好行金門｜低碳成績", text: shareText })["catch"](function(){});
+      }else{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(shareText)
+            .then(function(){ alert("已複製低碳分享文案到剪貼簿！"); })["catch"](function(){ alert(shareText); });
+        }else{
+          alert(shareText);
+        }
+      }
+    };
+  }
+}
+/* ================== 低碳估算模組結束 ================== */
+
 function render(){
   $("#score").textContent = String(state.score);
   $("#streak").textContent = String(state.streak);
@@ -359,6 +469,9 @@ function render(){
       "你完成了 " + ROUTE_NAME + " 的即時解謎！（分數：" + state.score + "｜時間：" + timeSec + " 秒）" +
       " 建議把此畫面作為「到店兌換/抽獎/導購套票」入口。";
 
+    // >>> 新增：完成時更新低碳成績 <<<
+    updateCarbonSummary(timeSec);
+
     if(!document.getElementById("rankBtn")){
       var btn2 = document.createElement("button");
       btn2.className = "btn";
@@ -370,6 +483,8 @@ function render(){
     }
   }else{
     $("#finish").style.display = "none";
+    var carbonBox2 = document.getElementById("carbonBox");
+    if(carbonBox2) carbonBox2.style.display = "none";
   }
 }
 
