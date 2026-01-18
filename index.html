@@ -261,6 +261,12 @@ const A_STOPS = [
 const ROUTE_NAME = "A線（水頭翟山線）";
 const KEY = "km_live_route_riddle_A_v1";
 
+/ 先把 state 讀出來（一定要在使用 state 之前）
+const state = JSON.parse(localStorage.getItem(KEY) || "{}");
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function $(s){ return document.querySelector(s); }
+  
+
 // ===== 排行榜（TM）設定 =====
 const LEADERBOARD_URL = "https://thtsai820-cpu.github.io/TM/leaderboard.html";
 
