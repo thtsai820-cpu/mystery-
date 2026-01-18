@@ -31,13 +31,76 @@
     .tag{display:inline-block;margin-right:6px;margin-top:6px;border:1px solid rgba(255,255,255,.12);padding:4px 8px;border-radius:999px;font-size:12px;opacity:.9}
     @media (max-width:760px){.grid2{grid-template-columns:1fr}}
   </style>
+  
 </head>
 <body>
+  
+<!-- ===== TM 平台導覽模組（mystery） ===== -->
+<script>
+  const PORTAL_URL = "https://thtsai820-cpu.github.io/TM/";
+
+  function getStopParam(){
+    const p = new URLSearchParams(location.search);
+    return (p.get("stop") || "A01").toUpperCase();
+  }
+
+  const STOP_INFO = {
+    A01:{ name:"金城車站" },
+    A02:{ name:"莒光樓" },
+    A03:{ name:"水頭聚落" },
+    A04:{ name:"翟山坑道" }
+  };
+
+  const CURRENT_STOP = getStopParam();
+  const CURRENT_STOP_NAME = (STOP_INFO[CURRENT_STOP]?.name) || CURRENT_STOP;
+</script>
+
+<div style="
+  position:sticky; top:0; z-index:9999;
+  background:#141622;
+  border-bottom:1px solid rgba(255,255,255,.12);
+  padding:10px 12px;
+  font-family:system-ui,-apple-system,'Noto Sans TC',Segoe UI,Roboto,Arial;
+">
+  <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 8px;font-size:12px;color:rgba(255,255,255,.9);">
+        🧩 即時解謎
+      </span>
+      <span style="border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 8px;font-size:12px;color:rgba(255,255,255,.9);">
+        📍 目前站點：<b id="topStopName"></b>（<span id="topStopId"></span>）
+      </span>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button onclick="location.href=PORTAL_URL+'route-a.html'"
+        style="border:1px solid rgba(255,255,255,.18);background:rgba(122,162,255,.95);color:#0b0c10;border-radius:12px;padding:8px 10px;font-weight:1000;cursor:pointer;">
+        🧭 A線怎麼搭
+      </button>
+      <button onclick="location.href=PORTAL_URL+'#games'"
+        style="border:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;border-radius:12px;padding:8px 10px;cursor:pointer;">
+        🎮 切換其他遊戲
+      </button>
+      <button onclick="location.href=PORTAL_URL+'?v='+Date.now()"
+        style="border:1px solid rgba(255,255,255,.18);background:#1d2140;color:#fff;border-radius:12px;padding:8px 10px;font-weight:900;cursor:pointer;">
+        ⬅ 回三合一平台
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 把目前站點顯示到導覽列
+  document.getElementById("topStopName").textContent = CURRENT_STOP_NAME;
+  document.getElementById("topStopId").textContent = CURRENT_STOP;
+</script>
+<!-- ===== 模組結束 ===== -->
+  
   <div class="wrap">
     <div class="card">
       <div class="row">
         <div>
-          <div class="pill">🚌 台灣好行金門｜即時路線解謎（示範：A線）</div>
+         <div class="pill" id="pagePill">🚌 台灣好行金門｜即時路線解謎（示範：A線）</div>
           <h1>在車上也能玩：到站才解鎖下一關</h1>
           <div class="sub">
             玩法：<b>開定位（或手動選站）→ 在站點附近自動解鎖 → 解謎答對 → 取得通關章</b>。<br/>
@@ -473,5 +536,14 @@ $("#shareBtn").onclick = share;
   }
 })();
 </script>
+  
+<script>
+  const pill = document.getElementById("pagePill");
+  if(pill){
+    pill.textContent = `🚌 台灣好行金門｜即時路線解謎（A線）｜目前站點：${CURRENT_STOP_NAME}（${CURRENT_STOP}）`;
+  }
+</script>
+
+  
 </body>
 </html>
