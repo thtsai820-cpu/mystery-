@@ -83,7 +83,7 @@
       </button>
       <button onclick="location.href=PORTAL_URL+'?v='+Date.now()"
         style="border:1px solid rgba(255,255,255,.18);background:#1d2140;color:#fff;border-radius:12px;padding:8px 10px;font-weight:900;cursor:pointer;">
-        ⬅ 回三合一平台
+        ⬅ 回首頁
       </button>
     </div>
   </div>
@@ -261,6 +261,13 @@ const A_STOPS = [
 const ROUTE_NAME = "A線（水頭翟山線）";
 const KEY = "km_live_route_riddle_A_v1";
 
+// ===== 排行榜（TM）設定 =====
+const LEADERBOARD_URL = "https://thtsai820-cpu.github.io/TM/leaderboard.html";
+
+// 計時：第一次進遊戲就記錄開始時間（ms）
+state.startAt ||= Date.now();
+
+  
 const state = JSON.parse(localStorage.getItem(KEY) || "{}");
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 function $(s){ return document.querySelector(s); }
@@ -352,11 +359,31 @@ function render(){
 
   // finish block
   if(state.done.length >= needCount){
-    $("#finish").style.display = "";
-    $("#finishText").textContent = `你完成了 ${ROUTE_NAME} 的即時解謎！建議用此畫面作為「到店兌換/抽獎/導購套票」入口。`;
-  }else{
-    $("#finish").style.display = "none";
+  $("#finish").style.display = "";
+
+  const timeSec = Math.max(1, Math.round((Date.now() - (state.startAt || Date.now())) / 1000));
+  const stopId = normCode(CURRENT_STOP); // 來自網址 stop，沒有就 A01
+  const finishMsg = `你完成了 ${ROUTE_NAME} 的即時解謎！` +
+                    `（分數：${state.score}｜時間：${timeSec} 秒）` +
+                    ` 建議用此畫面作為「到店兌換/抽獎/導購套票」入口。`;
+
+  $("#finishText").textContent = finishMsg;
+
+  // 顯示一個「送出排行榜」按鈕（如果不存在就動態加）
+  if(!document.getElementById("rankBtn")){
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.id = "rankBtn";
+    btn.textContent = "🏆 送出排行榜";
+    btn.onclick = ()=>submitToLeaderboard(false);
+    // 插在 share/coupon 後面
+    document.querySelector("#finish .row")?.appendChild(btn);
   }
+
+}else{
+  $("#finish").style.display = "none";
+}
+
 }
 
 function openMission(id){
@@ -500,6 +527,37 @@ function share(){
   }
 }
 
+function submitToLeaderboard(auto){
+  // auto=true 表示自動送出；false 表示手動按鈕送出
+  const timeSec = Math.max(1, Math.round((Date.now() - (state.startAt || Date.now())) / 1000));
+
+  // 避免重複送出（同一局只送一次）
+  if(state.sentToBoard){
+    if(!auto) alert("這一局已送出排行榜囉！");
+    return;
+  }
+  state.sentToBoard = true;
+  save();
+
+  const name = (state.playerName || "玩家");
+  const stopId = normCode(CURRENT_STOP);
+  const note = "A線即時解謎";
+
+  const url = new URL(LEADERBOARD_URL);
+  url.searchParams.set("game", "riddle");
+  url.searchParams.set("name", name);
+  url.searchParams.set("score", String(state.score || 0));
+  url.searchParams.set("time", String(timeSec));
+  url.searchParams.set("stop", stopId || "A01");
+  url.searchParams.set("note", note);
+
+  // 跳到排行榜頁（排行榜會自動讀取並入榜）
+  location.href = url.toString();
+}
+
+
+
+  
 // buttons
 $("#gpsBtn").onclick = startGPS;
 $("#gpsStopBtn").onclick = stopGPS;
@@ -522,6 +580,14 @@ $("#shareBtn").onclick = share;
 (function boot(){
   $("#needCount").textContent = String(needCount);
   render();
+
+    // 如果已完成且尚未送榜，可自動送（demo 很直覺）
+  if(state.done.length >= needCount && !state.sentToBoard){
+    // 你也可以改成 setTimeout(()=>submitToLeaderboard(true), 1200);
+    // 讓使用者先看到完成畫面再跳轉
+    setTimeout(()=>submitToLeaderboard(true), 1200);
+  }
+
 
   const url = new URL(location.href);
   const stop = url.searchParams.get("stop");
