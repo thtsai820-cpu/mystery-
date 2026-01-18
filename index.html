@@ -261,7 +261,7 @@ const A_STOPS = [
 const ROUTE_NAME = "A線（水頭翟山線）";
 const KEY = "km_live_route_riddle_A_v1";
 
-/ 先把 state 讀出來（一定要在使用 state 之前）
+// 先把 state 讀出來（一定要在使用 state 之前）
 const state = JSON.parse(localStorage.getItem(KEY) || "{}");
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 function $(s){ return document.querySelector(s); }
@@ -272,11 +272,6 @@ const LEADERBOARD_URL = "https://thtsai820-cpu.github.io/TM/leaderboard.html";
 
 // 計時：第一次進遊戲就記錄開始時間（ms）
 state.startAt ||= Date.now();
-
-  
-const state = JSON.parse(localStorage.getItem(KEY) || "{}");
-function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
-function $(s){ return document.querySelector(s); }
 
 state.done ||= [];       // 已完成站點 id
 state.score ||= 0;
