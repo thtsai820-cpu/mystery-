@@ -31,28 +31,28 @@
     .tag{display:inline-block;margin-right:6px;margin-top:6px;border:1px solid rgba(255,255,255,.12);padding:4px 8px;border-radius:999px;font-size:12px;opacity:.9}
     @media (max-width:760px){.grid2{grid-template-columns:1fr}}
   </style>
-  
 </head>
+
 <body>
-  
+
 <!-- ===== TM 平台導覽模組（mystery） ===== -->
 <script>
-  const PORTAL_URL = "https://thtsai820-cpu.github.io/TM/";
+  var PORTAL_URL = "https://thtsai820-cpu.github.io/TM/";
 
   function getStopParam(){
-    const p = new URLSearchParams(location.search);
-    return (p.get("stop") || "A01").toUpperCase();
+    var p = new URLSearchParams(location.search);
+    return String(p.get("stop") || "A01").toUpperCase();
   }
 
-  const STOP_INFO = {
+  var STOP_INFO = {
     A01:{ name:"金城車站" },
     A02:{ name:"莒光樓" },
     A03:{ name:"水頭聚落" },
     A04:{ name:"翟山坑道" }
   };
 
-  const CURRENT_STOP = getStopParam();
-  const CURRENT_STOP_NAME = (STOP_INFO[CURRENT_STOP]?.name) || CURRENT_STOP;
+  var CURRENT_STOP = getStopParam();
+  var CURRENT_STOP_NAME = (STOP_INFO[CURRENT_STOP] && STOP_INFO[CURRENT_STOP].name) ? STOP_INFO[CURRENT_STOP].name : CURRENT_STOP;
 </script>
 
 <div style="
@@ -90,224 +90,203 @@
 </div>
 
 <script>
-  // 把目前站點顯示到導覽列
   document.getElementById("topStopName").textContent = CURRENT_STOP_NAME;
   document.getElementById("topStopId").textContent = CURRENT_STOP;
 </script>
 <!-- ===== 模組結束 ===== -->
-  
-  <div class="wrap">
-    <div class="card">
-      <div class="row">
-        <div>
-         <div class="pill" id="pagePill">🚌 台灣好行金門｜即時路線解謎（示範：A線）</div>
-          <h1>在車上也能玩：到站才解鎖下一關</h1>
-          <div class="sub">
-            玩法：<b>開定位（或手動選站）→ 在站點附近自動解鎖 → 解謎答對 → 取得通關章</b>。<br/>
-            這套機制的核心是把「搭乘行為」直接變成遊戲進度：越搭越解鎖、越玩越想下車看。
-          </div>
-        </div>
-        <button class="btn secondary" id="resetBtn">重置進度</button>
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="row">
-        <div class="pill">🎯 目前路線：A線（水頭翟山線）</div>
-        <div class="pill">分數：<span id="score">0</span>　連勝：<span id="streak">0</span></div>
-      </div>
-      <div style="margin-top:10px">
-        <div class="row">
-          <div class="tiny muted">進度</div>
-          <div class="tiny muted"><span id="doneCount">0</span>/<span id="needCount">0</span></div>
-        </div>
-        <div class="progress"><div class="bar" id="bar"></div></div>
-        <div class="tiny muted" style="margin-top:8px" id="progressHint"></div>
-      </div>
-    </div>
-
-    <div class="grid2">
-      <div class="card" style="margin:0">
-        <h2>① 解鎖方式</h2>
-        <div class="tiny muted" style="margin-top:8px">
-          正式上線建議用 GPS 解鎖；demo 或室內測試可改用「手動選站」。
-        </div>
-
-        <div class="stop" style="margin-top:12px">
-          <div class="row" style="justify-content:flex-start">
-            <span class="tag">GPS 解鎖</span>
-            <span class="tag">近距離自動開關卡</span>
-          </div>
-          <div class="tiny muted" style="margin-top:8px" id="gpsStatus">定位狀態：未啟用</div>
-          <div class="row" style="margin-top:10px;justify-content:flex-start">
-            <button class="btn" id="gpsBtn">啟用定位</button>
-            <button class="btn secondary" id="gpsStopBtn">停止定位</button>
-          </div>
-          <div class="tiny muted" style="margin-top:8px">
-            提醒：iOS 需允許定位；若在 LINE/IG 內建瀏覽器，建議「在 Safari/Chrome 開啟」。
-          </div>
-        </div>
-
-        <div class="stop" style="margin-top:12px">
-          <div class="row" style="justify-content:flex-start">
-            <span class="tag">手動選站</span>
-            <span class="tag">demo/不開定位</span>
-          </div>
-          <div style="margin-top:8px">
-            <select id="manualSelect"></select>
-          </div>
-          <div class="row" style="margin-top:10px;justify-content:flex-start">
-            <button class="btn secondary" id="manualGoBtn">前往該站任務</button>
-          </div>
-        </div>
-
-        <div class="stop" style="margin-top:12px">
-          <div class="row" style="justify-content:flex-start">
-            <span class="tag">輸入站碼</span>
-            <span class="tag">配合 QR</span>
-          </div>
-          <div class="tiny muted" style="margin-top:8px">例如：A06、A07、A10（掃 QR 也可帶 stop 參數）</div>
-          <input id="codeInput" placeholder="輸入站碼，例如 A10" style="margin-top:8px" />
-          <div class="row" style="margin-top:10px;justify-content:flex-start">
-            <button class="btn secondary" id="codeGoBtn">前往該站任務</button>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="card" style="margin:0">
-        <h2>② 站點任務（到站才解鎖）</h2>
-        <div id="missionBox" class="tiny muted" style="margin-top:10px">
-          先啟用 GPS 或用「手動選站」進入第一關。
-        </div>
-        <div id="missionActions" class="row" style="margin-top:10px;justify-content:flex-start;display:none"></div>
-
-        <div class="stop" style="margin-top:12px">
-          <div class="tiny muted">📍 你的定位（若已啟用）</div>
-          <div class="tiny" style="margin-top:6px" id="locText">尚未取得定位</div>
-          <div class="tiny muted" style="margin-top:6px" id="nearText"></div>
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="pill" id="pagePill">🚌 台灣好行金門｜即時路線解謎（示範：A線）</div>
+        <h1>在車上也能玩：到站才解鎖下一關</h1>
+        <div class="sub">
+          玩法：<b>開定位（或手動選站）→ 在站點附近自動解鎖 → 解謎答對 → 取得通關章</b>。<br/>
+          核心概念：把「搭乘行為」變成遊戲進度：越搭越解鎖、越玩越想下車看。
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>③ 關卡列表（A線示範）</h2>
-      <div class="sub">
-        這裡先放 8 關示範（可擴成完整逐站）。<b>通關規則：</b>要依順序完成（模擬「搭乘路線」）。
-      </div>
-      <div id="stopsGrid" class="grid2" style="margin-top:12px"></div>
-      <div class="tiny muted" style="margin-top:10px">
-        ※ 站點座標目前為示意值：正式版請替換為正確座標或改用 QR/站碼解鎖。
-      </div>
-    </div>
-
-    <div class="card" id="finish" style="display:none">
-      <div class="pill">🎉 A線解謎完成</div>
-      <h2 style="margin-top:8px">你完成了「即時路線解謎」！</h2>
-      <div class="sub" id="finishText"></div>
-      <div class="row" style="margin-top:12px;justify-content:flex-start">
-        <button class="btn good" id="shareBtn">一鍵分享</button>
-        <button class="btn secondary" id="couponBtn">顯示兌換碼</button>
-      </div>
-      <div class="tiny" style="margin-top:10px" id="couponHint"></div>
+      <button class="btn secondary" id="resetBtn">重置進度</button>
     </div>
   </div>
 
+  <div class="card">
+    <div class="row">
+      <div class="pill">🎯 目前路線：A線（水頭翟山線）</div>
+      <div class="pill">分數：<span id="score">0</span>　連勝：<span id="streak">0</span></div>
+    </div>
+    <div style="margin-top:10px">
+      <div class="row">
+        <div class="tiny muted">進度</div>
+        <div class="tiny muted"><span id="doneCount">0</span>/<span id="needCount">0</span></div>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="tiny muted" style="margin-top:8px" id="progressHint"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="margin:0">
+      <h2>① 解鎖方式</h2>
+      <div class="tiny muted" style="margin-top:8px">
+        正式上線建議用 GPS 解鎖；demo 或室內測試可改用「手動選站」。
+      </div>
+
+      <div class="stop" style="margin-top:12px">
+        <div class="row" style="justify-content:flex-start">
+          <span class="tag">GPS 解鎖</span>
+          <span class="tag">近距離自動開關卡</span>
+        </div>
+        <div class="tiny muted" style="margin-top:8px" id="gpsStatus">定位狀態：未啟用</div>
+        <div class="row" style="margin-top:10px;justify-content:flex-start">
+          <button class="btn" id="gpsBtn">啟用定位</button>
+          <button class="btn secondary" id="gpsStopBtn">停止定位</button>
+        </div>
+        <div class="tiny muted" style="margin-top:8px">
+          提醒：iOS 需允許定位；若在 LINE/IG 內建瀏覽器，建議「在 Safari/Chrome 開啟」。
+        </div>
+      </div>
+
+      <div class="stop" style="margin-top:12px">
+        <div class="row" style="justify-content:flex-start">
+          <span class="tag">手動選站</span>
+          <span class="tag">demo/不開定位</span>
+        </div>
+        <div style="margin-top:8px">
+          <select id="manualSelect"></select>
+        </div>
+        <div class="row" style="margin-top:10px;justify-content:flex-start">
+          <button class="btn secondary" id="manualGoBtn">前往該站任務</button>
+        </div>
+      </div>
+
+      <div class="stop" style="margin-top:12px">
+        <div class="row" style="justify-content:flex-start">
+          <span class="tag">輸入站碼</span>
+          <span class="tag">配合 QR</span>
+        </div>
+        <div class="tiny muted" style="margin-top:8px">例如：A06、A07、A10（掃 QR 也可帶 stop 參數）</div>
+        <input id="codeInput" placeholder="輸入站碼，例如 A10" style="margin-top:8px" />
+        <div class="row" style="margin-top:10px;justify-content:flex-start">
+          <button class="btn secondary" id="codeGoBtn">前往該站任務</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin:0">
+      <h2>② 站點任務（到站才解鎖）</h2>
+      <div id="missionBox" class="tiny muted" style="margin-top:10px">
+        先啟用 GPS 或用「手動選站」進入第一關。
+      </div>
+      <div id="missionActions" class="row" style="margin-top:10px;justify-content:flex-start;display:none"></div>
+
+      <div class="stop" style="margin-top:12px">
+        <div class="tiny muted">📍 你的定位（若已啟用）</div>
+        <div class="tiny" style="margin-top:6px" id="locText">尚未取得定位</div>
+        <div class="tiny muted" style="margin-top:6px" id="nearText"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 關卡列表（A線示範）</h2>
+    <div class="sub">
+      這裡放示範關卡（可擴成完整逐站）。<b>通關規則：</b>需依順序完成（模擬「搭乘路線」）。
+    </div>
+    <div id="stopsGrid" class="grid2" style="margin-top:12px"></div>
+    <div class="tiny muted" style="margin-top:10px">
+      ※ 站點座標目前為示意值：正式版請替換為正確座標或改用 QR/站碼解鎖。
+    </div>
+  </div>
+
+  <div class="card" id="finish" style="display:none">
+    <div class="pill">🎉 A線解謎完成</div>
+    <h2 style="margin-top:8px">你完成了「即時路線解謎」！</h2>
+    <div class="sub" id="finishText"></div>
+    <div class="row" style="margin-top:12px;justify-content:flex-start" id="finishRow">
+      <button class="btn good" id="shareBtn">一鍵分享</button>
+      <button class="btn secondary" id="couponBtn">顯示兌換碼</button>
+    </div>
+    <div class="tiny" style="margin-top:10px" id="couponHint"></div>
+  </div>
+</div>
+
 <script>
-/** ========= 站點資料（A線示範） =========
- * id：站碼（用於 QR / 手動選站）
- * lat/lng：示意座標（正式版請換成真實座標）
- * unlockRadiusM：距離多少公尺內解鎖
- * q：題目
- */
-const A_STOPS = [
+/** ========= 站點資料（A線示範） ========= */
+var A_STOPS = [
   { id:"A01", name:"金城車站", tags:["起點","交通"], lat:24.43346, lng:118.31989, unlockRadiusM:200,
     story:"從金城出發，今天你不是趕行程，而是在『搭車解謎』。",
     q:{ t:"這款遊戲為何能推廣搭乘？", a:["因為要到站才解鎖","因為不需要移動","因為越慢越好"], c:0 }
   },
-
   { id:"A06", name:"莒光樓", tags:["地標","遠眺"], lat:24.42497, lng:118.31900, unlockRadiusM:230,
     story:"到地標時，最適合把『看見』變成『想分享』。",
     q:{ t:"地標關卡最適合加什麼？", a:["拍照+一句話分享","禁止拍照","不給提示"], c:0 }
   },
-
   { id:"A07", name:"水頭聚落", tags:["聚落","洋樓"], lat:24.41147, lng:118.29996, unlockRadiusM:260,
     story:"聚落的好，不在衝點，而在慢走觀察。你準備好進入故事了嗎？",
     q:{ t:"聚落型景點最適合的玩法？", a:["慢走觀察+解鎖故事","一路快跑","只看地圖"], c:0 }
   },
-
   { id:"A08", name:"明遺老街", tags:["老街","懷舊"], lat:24.40371, lng:118.30883, unlockRadiusM:240,
     story:"老街不是『買到什麼』，而是『你怎麼走』。用解謎把步行變有趣。",
     q:{ t:"老街關卡最適合結合？", a:["尋寶線索","增加排隊","不讓人停"], c:0 }
   },
-
   { id:"A09", name:"文臺寶塔", tags:["風景點","打卡"], lat:24.39879, lng:118.30600, unlockRadiusM:240,
-    story:"這種風景點的行銷最適合：一句標語＋一張照片＝一則分享。",
+    story:"風景點的行銷最適合：一句標語＋一張照片＝一則分享。",
     q:{ t:"社群分享的最小單位常是？", a:["一句話+一張照片","長篇論文","完全不說"], c:0 }
   },
-
   { id:"A10", name:"翟山坑道", tags:["軍事地景","沉浸"], lat:24.39030, lng:118.32054, unlockRadiusM:280,
-    story:"坑道的沉浸感非常強。把『到此一遊』升級成『完成任務』，記憶更深。",
+    story:"坑道的沉浸感很強。把『到此一遊』升級成『完成任務』，記憶更深。",
     q:{ t:"坑道類景點最能強化什麼？", a:["沉浸感","無聊感","看不到"], c:0 }
   },
-
   { id:"A11", name:"珠山聚落", tags:["聚落","收尾"], lat:24.40148, lng:118.32058, unlockRadiusM:260,
     story:"最後一關：把今日路線收成一張『完成徽章』，你就能去兌換/抽獎。",
     q:{ t:"完成徽章最適合做什麼？", a:["到店兌換/抽獎","立刻刪掉","不分享"], c:0 }
-  },
+  }
 ];
 
+var ROUTE_NAME = "A線（水頭翟山線）";
+var KEY = "km_live_route_riddle_A_v1";
 
-const ROUTE_NAME = "A線（水頭翟山線）";
-const KEY = "km_live_route_riddle_A_v1";
-
-// 先把 state 讀出來（一定要在使用 state 之前）
-const state = JSON.parse(localStorage.getItem(KEY) || "{}");
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 function $(s){ return document.querySelector(s); }
-  
 
-// ===== 排行榜（TM）設定 =====
-const LEADERBOARD_URL = "https://thtsai820-cpu.github.io/TM/leaderboard.html";
+var state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); }
+catch(e){ state = {}; }
 
-// 計時：第一次進遊戲就記錄開始時間（ms）
-state.startAt ||= Date.now();
+/* === 相容寫法：不使用 ||= / ?. === */
+if (!state.startAt) state.startAt = Date.now();
+if (!Array.isArray(state.done)) state.done = [];
+if (typeof state.score !== "number") state.score = 0;
+if (typeof state.streak !== "number") state.streak = 0;
+if (!state.current) state.current = A_STOPS[0].id;
 
-state.done ||= [];       // 已完成站點 id
-state.score ||= 0;
-state.streak ||= 0;
-state.current ||= A_STOPS[0].id; // 目前關卡目標（依順序）
+var LEADERBOARD_URL = "https://thtsai820-cpu.github.io/TM/leaderboard.html";
+var needCount = A_STOPS.length;
 
-const needCount = A_STOPS.length;
-
-let watchId = null;
-let lastPos = null;
+var watchId = null;
+var lastPos = null;
 
 function normCode(s){
-  return (s||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  return String(s||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
 }
-
 function getStop(id){
-  return A_STOPS.find(x=>x.id===id);
+  for(var i=0;i<A_STOPS.length;i++){
+    if(A_STOPS[i].id === id) return A_STOPS[i];
+  }
+  return null;
 }
-
-function nextStopId(){
-  const idx = A_STOPS.findIndex(s=>s.id===state.current);
-  if(idx < 0) return A_STOPS[0].id;
-  return A_STOPS[Math.min(idx+1, A_STOPS.length-1)].id;
-}
-
 function requiredStop(){
-  // 目前必須完成的那一關（順序進行）
   return getStop(state.current) || A_STOPS[0];
 }
-
 function haversineM(lat1, lon1, lat2, lon2){
-  const R = 6371000;
-  const toRad = d => d * Math.PI / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  var R = 6371000;
+  function toRad(d){ return d * Math.PI / 180; }
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*
+          Math.sin(dLon/2)*Math.sin(dLon/2);
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
@@ -317,156 +296,164 @@ function render(){
   $("#doneCount").textContent = String(state.done.length);
   $("#needCount").textContent = String(needCount);
 
-  const pct = (state.done.length / needCount) * 100;
-  $("#bar").style.width = `${Math.min(100, pct)}%`;
+  var pct = (state.done.length / needCount) * 100;
+  $("#bar").style.width = (pct > 100 ? "100" : String(pct)) + "%";
 
-  const req = requiredStop();
-  $("#progressHint").textContent = `下一關：${req.id}｜${req.name}（需依順序通關）`;
+  var req = requiredStop();
+  $("#progressHint").textContent = "下一關：" + req.id + "｜" + req.name + "（需依順序通關）";
 
-  // stops list
-  const grid = $("#stopsGrid");
+  var grid = $("#stopsGrid");
   grid.innerHTML = "";
-  A_STOPS.forEach((st, idx)=>{
-    const done = state.done.includes(st.id);
-    const locked = !done && st.id !== state.current; // 只能做 current 那關
-    const div = document.createElement("div");
+
+  for(var i=0;i<A_STOPS.length;i++){
+    var st = A_STOPS[i];
+    var done = state.done.indexOf(st.id) >= 0;
+    var locked = (!done && st.id !== state.current);
+
+    var div = document.createElement("div");
     div.className = "stop" + (done ? " done" : (locked ? " locked" : ""));
-    div.innerHTML = `
-      <div style="font-weight:900">${done?"✅":"${locked?"🔒":"🎯"}"} ${st.name}</div>
-      <div class="tiny muted">站碼：${st.id}</div>
-      <div>${st.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
-      <div class="tiny" style="margin-top:8px;opacity:.9">${st.story}</div>
-      <div class="row" style="margin-top:10px;justify-content:flex-start">
-        <button class="btn secondary" data-go="${st.id}" ${locked ? "disabled style='opacity:.5;cursor:not-allowed'" : ""}>前往任務</button>
-      </div>
-    `;
+
+    var icon = done ? "✅" : (locked ? "🔒" : "🎯");
+
+    var tagsHtml = "";
+    for(var t=0;t<st.tags.length;t++){
+      tagsHtml += "<span class='tag'>" + st.tags[t] + "</span>";
+    }
+
+    div.innerHTML =
+      "<div style='font-weight:900'>" + icon + " " + st.name + "</div>" +
+      "<div class='tiny muted'>站碼：" + st.id + "</div>" +
+      "<div>" + tagsHtml + "</div>" +
+      "<div class='tiny' style='margin-top:8px;opacity:.9'>" + st.story + "</div>" +
+      "<div class='row' style='margin-top:10px;justify-content:flex-start'>" +
+        "<button class='btn secondary' data-go='" + st.id + "'" +
+        (locked ? " disabled style='opacity:.5;cursor:not-allowed'" : "") +
+        ">前往任務</button>" +
+      "</div>";
+
     grid.appendChild(div);
-  });
+  }
 
-  grid.querySelectorAll("button[data-go]").forEach(b=>{
-    b.onclick = ()=>openMission(b.getAttribute("data-go"));
-  });
+  var buttons = grid.querySelectorAll("button[data-go]");
+  for(var b=0;b<buttons.length;b++){
+    (function(btn){
+      btn.onclick = function(){ openMission(btn.getAttribute("data-go")); };
+    })(buttons[b]);
+  }
 
-  // manual select options
-  const sel = $("#manualSelect");
-  if(sel.options.length === 0){
-    A_STOPS.forEach(st=>{
-      const opt = document.createElement("option");
-      opt.value = st.id;
-      opt.textContent = `${st.id}｜${st.name}`;
+  var sel = $("#manualSelect");
+  if(sel && sel.options.length === 0){
+    for(var j=0;j<A_STOPS.length;j++){
+      var opt = document.createElement("option");
+      opt.value = A_STOPS[j].id;
+      opt.textContent = A_STOPS[j].id + "｜" + A_STOPS[j].name;
       sel.appendChild(opt);
-    });
+    }
   }
 
-  // finish block
   if(state.done.length >= needCount){
-  $("#finish").style.display = "";
+    $("#finish").style.display = "";
+    var timeSec = Math.max(1, Math.round((Date.now() - (state.startAt || Date.now())) / 1000));
+    var stopId = normCode(CURRENT_STOP);
+    $("#finishText").textContent =
+      "你完成了 " + ROUTE_NAME + " 的即時解謎！（分數：" + state.score + "｜時間：" + timeSec + " 秒）" +
+      " 建議把此畫面作為「到店兌換/抽獎/導購套票」入口。";
 
-  const timeSec = Math.max(1, Math.round((Date.now() - (state.startAt || Date.now())) / 1000));
-  const stopId = normCode(CURRENT_STOP); // 來自網址 stop，沒有就 A01
-  const finishMsg = `你完成了 ${ROUTE_NAME} 的即時解謎！` +
-                    `（分數：${state.score}｜時間：${timeSec} 秒）` +
-                    ` 建議用此畫面作為「到店兌換/抽獎/導購套票」入口。`;
-
-  $("#finishText").textContent = finishMsg;
-
-  // 顯示一個「送出排行榜」按鈕（如果不存在就動態加）
-  if(!document.getElementById("rankBtn")){
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.id = "rankBtn";
-    btn.textContent = "🏆 送出排行榜";
-    btn.onclick = ()=>submitToLeaderboard(false);
-    // 插在 share/coupon 後面
-    document.querySelector("#finish .row")?.appendChild(btn);
+    if(!document.getElementById("rankBtn")){
+      var btn2 = document.createElement("button");
+      btn2.className = "btn";
+      btn2.id = "rankBtn";
+      btn2.textContent = "🏆 送出排行榜";
+      btn2.onclick = function(){ submitToLeaderboard(false); };
+      var row = document.getElementById("finishRow");
+      if(row) row.appendChild(btn2);
+    }
+  }else{
+    $("#finish").style.display = "none";
   }
-
-}else{
-  $("#finish").style.display = "none";
-}
-
 }
 
 function openMission(id){
-  const req = requiredStop();
-  const box = $("#missionBox");
-  const act = $("#missionActions");
+  var req = requiredStop();
+  var box = $("#missionBox");
+  var act = $("#missionActions");
   act.style.display = "none";
 
   if(id !== req.id){
     box.className = "tiny muted";
-    box.innerHTML = `目前需先完成 <b>${req.id}｜${req.name}</b> 才能解鎖下一關。`;
+    box.innerHTML = "目前需先完成 <b>" + req.id + "｜" + req.name + "</b> 才能解鎖下一關。";
     return;
   }
 
-  // 是否已在附近（GPS 解鎖）
-  let nearOk = true;
-  let distText = "";
+  var nearOk = true;
+  var distText = "";
+
   if(lastPos){
-    const d = haversineM(lastPos.lat, lastPos.lng, req.lat, req.lng);
+    var d = haversineM(lastPos.lat, lastPos.lng, req.lat, req.lng);
     nearOk = d <= req.unlockRadiusM;
-    distText = `（距離約 ${Math.round(d)}m，解鎖範圍 ${req.unlockRadiusM}m）`;
+    distText = "（距離約 " + Math.round(d) + "m，解鎖範圍 " + req.unlockRadiusM + "m）";
   }else{
-    // 沒定位就允許手動 demo
     nearOk = true;
     distText = "（未啟用定位：以 demo 模式進入）";
   }
 
   if(!nearOk){
     box.className = "tiny muted";
-    box.innerHTML = `你還沒到達 <b>${req.name}</b> 附近，先搭車到站再挑戰！<br/><span class="muted">${distText}</span>`;
+    box.innerHTML = "你還沒到達 <b>" + req.name + "</b> 附近，先搭車到站再挑戰！<br/><span class='muted'>" + distText + "</span>";
     return;
   }
 
   box.className = "tiny";
-  box.innerHTML = `
-    <div class="pill">📍 ${req.id}｜${req.name}</div>
-    <div style="margin-top:10px;opacity:.92">${req.story}</div>
-    <div style="margin-top:10px;font-weight:900">謎題：</div>
-    <div style="margin-top:6px">${req.q.t} <span class="muted">${distText}</span></div>
-  `;
+  box.innerHTML =
+    "<div class='pill'>📍 " + req.id + "｜" + req.name + "</div>" +
+    "<div style='margin-top:10px;opacity:.92'>" + req.story + "</div>" +
+    "<div style='margin-top:10px;font-weight:900'>謎題：</div>" +
+    "<div style='margin-top:6px'>" + req.q.t + " <span class='muted'>" + distText + "</span></div>";
 
   act.innerHTML = "";
-  req.q.a.forEach((opt, idx)=>{
-    const b = document.createElement("button");
-    b.className = "btn secondary";
-    b.textContent = `${idx+1}. ${opt}`;
-    b.onclick = ()=>answer(req, idx);
-    act.appendChild(b);
-  });
+  for(var i=0;i<req.q.a.length;i++){
+    (function(idx){
+      var b = document.createElement("button");
+      b.className = "btn secondary";
+      b.textContent = (idx+1) + ". " + req.q.a[idx];
+      b.onclick = function(){ answer(req, idx); };
+      act.appendChild(b);
+    })(i);
+  }
   act.style.display = "flex";
 }
 
 function answer(req, pickIdx){
-  const box = $("#missionBox");
-  const act = $("#missionActions");
+  var box = $("#missionBox");
+  var act = $("#missionActions");
+
   if(pickIdx === req.q.c){
-    // correct
-    state.done ||= [];
-    if(!state.done.includes(req.id)) state.done.push(req.id);
+    if (!Array.isArray(state.done)) state.done = [];
+    if(state.done.indexOf(req.id) < 0) state.done.push(req.id);
 
     state.streak = (state.streak||0) + 1;
-    const bonus = Math.min(30, state.streak * 3);
+    var bonus = Math.min(30, state.streak * 3);
     state.score = (state.score||0) + 20 + bonus;
 
-    // advance current
-    const idx = A_STOPS.findIndex(s=>s.id===req.id);
-    if(idx < A_STOPS.length - 1){
+    var idx = -1;
+    for(var i=0;i<A_STOPS.length;i++){
+      if(A_STOPS[i].id === req.id){ idx = i; break; }
+    }
+    if(idx >= 0 && idx < A_STOPS.length - 1){
       state.current = A_STOPS[idx+1].id;
     }
     save();
 
+    var next = requiredStop();
     box.className = "tiny";
-    box.innerHTML = `✅ 通關成功！你獲得 <b>${20+bonus}</b> 分（連勝加成 +${bonus}）。<br/>
-      下一關已解鎖：<b>${requiredStop().id}｜${requiredStop().name}</b>`;
+    box.innerHTML = "✅ 通關成功！你獲得 <b>" + (20+bonus) + "</b> 分（連勝加成 +" + bonus + "）。<br/>下一關已解鎖：<b>" + next.id + "｜" + next.name + "</b>";
     act.style.display = "none";
     render();
   }else{
-    // wrong
     state.streak = 0;
     save();
     box.className = "tiny";
-    box.innerHTML = `再試一次～提示：這題答案跟「搭乘到站解鎖」或「導流分享」有關。`;
+    box.innerHTML = "再試一次～提示：這題答案跟「到站解鎖」或「導流分享」有關。";
   }
 }
 
@@ -479,28 +466,28 @@ function startGPS(){
 
   $("#gpsStatus").textContent = "定位狀態：請允許定位…";
   watchId = navigator.geolocation.watchPosition(
-    (pos)=>{
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = Math.round(pos.coords.accuracy || 0);
-      lastPos = { lat, lng, acc, t: Date.now() };
+    function(pos){
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      var acc = Math.round(pos.coords.accuracy || 0);
+      lastPos = { lat:lat, lng:lng, acc:acc, t:Date.now() };
 
-      $("#locText").textContent = `lat ${lat.toFixed(6)}, lng ${lng.toFixed(6)}（精度約 ${acc}m）`;
+      $("#locText").textContent = "lat " + lat.toFixed(6) + ", lng " + lng.toFixed(6) + "（精度約 " + acc + "m）";
 
-      const req = requiredStop();
-      const d = haversineM(lat, lng, req.lat, req.lng);
-      const near = d <= req.unlockRadiusM;
-      $("#nearText").textContent = `距離下一關「${req.name}」約 ${Math.round(d)}m（${near ? "✅ 可解鎖" : "🔒 未到達"}）`;
+      var req = requiredStop();
+      var d = haversineM(lat, lng, req.lat, req.lng);
+      var near = d <= req.unlockRadiusM;
 
+      $("#nearText").textContent = "距離下一關「" + req.name + "」約 " + Math.round(d) + "m（" + (near ? "✅ 可解鎖" : "🔒 未到達") + "）";
       $("#gpsStatus").textContent = "定位狀態：已啟用（即時更新中）";
-      // 如果已經靠近就自動打開任務
+
       if(near) openMission(req.id);
     },
-    (err)=>{
+    function(err){
       $("#gpsStatus").textContent = "定位狀態：啟用失敗（請在瀏覽器設定允許定位）";
-      $("#locText").textContent = `錯誤：${err.message || err.code}`;
+      $("#locText").textContent = "錯誤：" + (err.message || err.code);
     },
-    { enableHighAccuracy: true, maximumAge: 2000, timeout: 12000 }
+    { enableHighAccuracy:true, maximumAge:2000, timeout:12000 }
   );
 }
 
@@ -514,25 +501,28 @@ function stopGPS(){
 }
 
 function showCoupon(){
-  const device = (state.deviceId ||= Math.random().toString(16).slice(2,10)).toUpperCase();
+  if (!state.deviceId) state.deviceId = Math.random().toString(16).slice(2,10);
   save();
-  $("#couponHint").textContent = `示範兌換碼：KM-A-RIDDLE-${device}（正式版建議後端核銷）`;
+  $("#couponHint").textContent = "示範兌換碼：KM-A-RIDDLE-" + String(state.deviceId).toUpperCase() + "（正式版建議後端核銷）";
 }
 
 function share(){
-  const text = `我剛完成台灣好行金門 ${ROUTE_NAME} 的「即時路線解謎」🚌🧩 分數 ${state.score}！#台灣好行 #金門`;
+  var text = "我剛完成台灣好行金門 " + ROUTE_NAME + " 的「即時路線解謎」🚌🧩 分數 " + state.score + "！#台灣好行 #金門";
   if(navigator.share){
-    navigator.share({ title:"台灣好行金門｜即時路線解謎", text }).catch(()=>{});
+    navigator.share({ title:"台灣好行金門｜即時路線解謎", text:text })["catch"](function(){});
   }else{
-    navigator.clipboard?.writeText(text).then(()=>alert("已複製分享文案到剪貼簿！")).catch(()=>alert(text));
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ alert("已複製分享文案到剪貼簿！"); })
+      ["catch"](function(){ alert(text); });
+    }else{
+      alert(text);
+    }
   }
 }
 
 function submitToLeaderboard(auto){
-  // auto=true 表示自動送出；false 表示手動按鈕送出
-  const timeSec = Math.max(1, Math.round((Date.now() - (state.startAt || Date.now())) / 1000));
+  var timeSec = Math.max(1, Math.round((Date.now() - (state.startAt || Date.now())) / 1000));
 
-  // 避免重複送出（同一局只送一次）
   if(state.sentToBoard){
     if(!auto) alert("這一局已送出排行榜囉！");
     return;
@@ -540,11 +530,11 @@ function submitToLeaderboard(auto){
   state.sentToBoard = true;
   save();
 
-  const name = (state.playerName || "玩家");
-  const stopId = normCode(CURRENT_STOP);
-  const note = "A線即時解謎";
+  var name = state.playerName || "玩家";
+  var stopId = normCode(CURRENT_STOP);
+  var note = "A線即時解謎";
 
-  const url = new URL(LEADERBOARD_URL);
+  var url = new URL(LEADERBOARD_URL);
   url.searchParams.set("game", "riddle");
   url.searchParams.set("name", name);
   url.searchParams.set("score", String(state.score || 0));
@@ -552,24 +542,22 @@ function submitToLeaderboard(auto){
   url.searchParams.set("stop", stopId || "A01");
   url.searchParams.set("note", note);
 
-  // 跳到排行榜頁（排行榜會自動讀取並入榜）
   location.href = url.toString();
 }
 
-
-
-  
-// buttons
+/* ===== buttons ===== */
 $("#gpsBtn").onclick = startGPS;
 $("#gpsStopBtn").onclick = stopGPS;
 
-$("#manualGoBtn").onclick = ()=>openMission($("#manualSelect").value);
-$("#codeGoBtn").onclick = ()=>{
-  const code = normCode($("#codeInput").value);
+$("#manualGoBtn").onclick = function(){
+  openMission($("#manualSelect").value);
+};
+$("#codeGoBtn").onclick = function(){
+  var code = normCode($("#codeInput").value);
   openMission(code);
 };
 
-$("#resetBtn").onclick = ()=>{
+$("#resetBtn").onclick = function(){
   localStorage.removeItem(KEY);
   location.href = location.pathname + "?v=" + Date.now();
 };
@@ -577,40 +565,27 @@ $("#resetBtn").onclick = ()=>{
 $("#couponBtn").onclick = showCoupon;
 $("#shareBtn").onclick = share;
 
-// boot: support ?stop=A10
+/* ===== boot ===== */
 (function boot(){
-  $("#needCount").textContent = String(needCount);
   render();
 
-    // 如果已完成且尚未送榜，可自動送（demo 很直覺）
-  if(state.done.length >= needCount && !state.sentToBoard){
-    // 你也可以改成 setTimeout(()=>submitToLeaderboard(true), 1200);
-    // 讓使用者先看到完成畫面再跳轉
-    setTimeout(()=>submitToLeaderboard(true), 1200);
+  var pill = document.getElementById("pagePill");
+  if(pill){
+    pill.textContent = "🚌 台灣好行金門｜即時路線解謎（A線）｜目前站點：" + CURRENT_STOP_NAME + "（" + CURRENT_STOP + "）";
   }
 
-
-  const url = new URL(location.href);
-  const stop = url.searchParams.get("stop");
+  // 支援 ?stop=A10（仍遵循順序規則）
+  var url = new URL(location.href);
+  var stop = url.searchParams.get("stop");
   if(stop){
-    const code = normCode(stop);
-    // 若 URL 指向的不是 current，仍遵循順序規則
+    var code = normCode(stop);
     $("#codeInput").value = code;
     openMission(code);
   }else{
-    // 自動聚焦到當前關卡
     openMission(state.current);
   }
 })();
 </script>
-  
-<script>
-  const pill = document.getElementById("pagePill");
-  if(pill){
-    pill.textContent = `🚌 台灣好行金門｜即時路線解謎（A線）｜目前站點：${CURRENT_STOP_NAME}（${CURRENT_STOP}）`;
-  }
-</script>
 
-  
 </body>
 </html>
